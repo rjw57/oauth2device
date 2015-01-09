@@ -1,4 +1,4 @@
-package oauth2device_examples
+package oauth2device
 
 import (
 	"fmt"
