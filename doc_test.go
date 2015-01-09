@@ -13,7 +13,7 @@ import (
 )
 
 // An simple example of using this package for device authorization.
-func ExampleDeviceAuthorizationFlow() {
+func Example() {
 	// The usual OAuth2 configuration
 	var clientOAuthConfig = &oauth2.Config{
 		ClientID:     "<insert client id here>",
