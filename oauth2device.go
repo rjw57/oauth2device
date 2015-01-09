@@ -45,7 +45,7 @@ type tokenOrError struct {
 var (
 	// ErrAccessDenied is an error returned when the user has denied this
 	// app access to their account.
-	ErrAccessDenied = errors.New("Access denied by user")
+	ErrAccessDenied = errors.New("access denied by user")
 )
 
 const (
