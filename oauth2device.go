@@ -38,8 +38,38 @@ type Config struct {
 // A tokenOrError is either an OAuth2 Token response or an error indicating why
 // such a response failed.
 type tokenOrError struct {
-	*oauth2.Token
-	Error string `json:"error,omitempty"`
+	AccessToken  string         `json:"access_token"`
+	TokenType    string         `json:"token_type"`
+	RefreshToken string         `json:"refresh_token"`
+	ExpiresIn    expirationTime `json:"expires_in"` // at least PayPal returns string, while most return number
+	Expires      expirationTime `json:"expires"`    // broken Facebook spelling of expires_in
+	Error        string         `json:"error,omitempty"`
+}
+
+func (e *tokenOrError) expiry() (t time.Time) {
+	if v := e.ExpiresIn; v != 0 {
+		return time.Now().Add(time.Duration(v) * time.Second)
+	}
+	if v := e.Expires; v != 0 {
+		return time.Now().Add(time.Duration(v) * time.Second)
+	}
+	return
+}
+
+type expirationTime int32
+
+func (e *expirationTime) UnmarshalJSON(b []byte) error {
+	var n json.Number
+	err := json.Unmarshal(b, &n)
+	if err != nil {
+		return err
+	}
+	i, err := n.Int64()
+	if err != nil {
+		return err
+	}
+	*e = expirationTime(i)
+	return nil
 }
 
 var (
@@ -110,7 +140,14 @@ func WaitForDeviceAuthorization(client *http.Client, config *Config, code *Devic
 		switch token.Error {
 		case "":
 
-			return token.Token, nil
+			// Convert the token into an "oauth2" library token,
+			// which doesn't use ExpiresIn.
+			return &oauth2.Token{
+				AccessToken:  token.AccessToken,
+				TokenType:    token.TokenType,
+				RefreshToken: token.RefreshToken,
+				Expiry:       token.expiry(),
+			}, nil
 		case "authorization_pending":
 
 		case "slow_down":
