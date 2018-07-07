@@ -89,10 +89,11 @@ func RequestDeviceCode(client *http.Client, config *Config) (*DeviceCode, error)
 	scopes := strings.Join(config.Scopes, " ")
 	resp, err := client.PostForm(config.DeviceEndpoint.CodeURL,
 		url.Values{"client_id": {config.ClientID}, "scope": {scopes}})
-
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf(
 			"request for device code authorisation returned status %v (%v)",
@@ -125,6 +126,8 @@ func WaitForDeviceAuthorization(client *http.Client, config *Config, code *Devic
 		if err != nil {
 			return nil, err
 		}
+		defer resp.Body.Close()
+
 		if resp.StatusCode != http.StatusOK {
 			return nil, fmt.Errorf("HTTP error %v (%v) when polling for OAuth token",
 				resp.StatusCode, http.StatusText(resp.StatusCode))
