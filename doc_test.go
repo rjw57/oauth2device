@@ -1,4 +1,4 @@
-package oauth2device
+package oauth2device_test
 
 import (
 	"fmt"
